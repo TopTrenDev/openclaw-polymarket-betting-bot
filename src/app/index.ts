@@ -1,9 +1,9 @@
-import { cfg } from "./config.js";
-import { PolymarketConnector } from "./connectors/polymarket.js";
-import { buildFeatures } from "./engine/features.js";
-import { predict } from "./engine/predictor.js";
-import { PaperTrader } from "./engine/paperTrader.js";
-import { LlmScorer } from "./models/llmScorer.js";
+import { cfg } from "../lib/config.js";
+import { PolymarketConnector } from "../lib/connectors/polymarket.js";
+import { buildFeatures } from "../lib/engine/features.js";
+import { predict } from "../lib/engine/predictor.js";
+import { PaperTrader } from "../lib/engine/paperTrader.js";
+import { LlmScorer } from "../lib/models/llmScorer.js";
 
 const connector = new PolymarketConnector(
   cfg.polymarketRestBase,

@@ -1,16 +1,13 @@
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
-import { cfg } from "./config.js";
-import { PolymarketConnector } from "./connectors/polymarket.js";
-import { buildFeatures } from "./engine/features.js";
-import { predict } from "./engine/predictor.js";
-import { LlmScorer } from "./models/llmScorer.js";
+import { cfg } from "../lib/config.js";
+import { PolymarketConnector } from "../lib/connectors/polymarket.js";
+import { buildFeatures } from "../lib/engine/features.js";
+import { predict } from "../lib/engine/predictor.js";
+import { LlmScorer } from "../lib/models/llmScorer.js";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const uiDir = path.resolve(__dirname, "../ui");
+const uiDir = path.resolve(process.cwd(), "ui");
 
 const connector = new PolymarketConnector(
   cfg.polymarketRestBase,
@@ -68,5 +65,5 @@ const server = http.createServer(async (req, res) => {
 
 const port = 8787;
 server.listen(port, () => {
-  console.log(`UI running at http://localhost:${port}`);
+  console.log(`OpenClaw UI at http://localhost:${port}`);
 });

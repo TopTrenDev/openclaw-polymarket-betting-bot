@@ -78,7 +78,6 @@ export class PolymarketConnector {
       byWallet.set(wallet, prev);
     }
 
-    // Whale filter: wallets with >= $200 notional in current sample window
     const whales = [...byWallet.entries()]
       .map(([wallet, w]) => ({ wallet, ...w }))
       .filter((w) => w.gross >= 200)
@@ -122,7 +121,6 @@ export class PolymarketConnector {
       }
     }
 
-    // Prefer active 5m BTC market discovered from live trades stream
     const recentTrades = await this.fetchRecentTrades(300);
     const btc5m = recentTrades.find((t) => (t.eventSlug || "").startsWith("btc-updown-5m-"));
     if (btc5m?.eventSlug) {
@@ -134,7 +132,6 @@ export class PolymarketConnector {
       }
     }
 
-    // Fallback: active BTC up/down market
     const all = await this.fetchJson<GammaMarket[]>(`${this.baseUrl}/markets?closed=false&active=true&limit=1000&offset=500`);
     const candidates = all.filter((m) => {
       const q = `${m.question || ""} ${m.slug || ""}`.toLowerCase();
@@ -152,7 +149,6 @@ export class PolymarketConnector {
   }
 
   private deriveYesPrice(m: GammaMarket): number {
-    // Try outcomePrices for explicit Up/Down mapping first
     const outcomes = parseJsonArray(m.outcomes);
     const prices = parseJsonArray(m.outcomePrices).map(Number);
     if (outcomes.length === prices.length && outcomes.length >= 2) {

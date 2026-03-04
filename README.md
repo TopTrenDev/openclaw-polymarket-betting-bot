@@ -17,6 +17,7 @@ A **TypeScript** skeleton bot for **5-minute** prediction markets on [Polymarket
 
 ---
 
+
 ## 🚀 Quick Start
 
 ```bash
@@ -48,16 +49,33 @@ The UI lets you:
 
 ---
 
-## 📁 Project Layout (high level)
+## 📁 Project layout
+
+```
+├── src/
+│   ├── app/                 # Bot entry point
+│   │   └── index.ts         # Poll loop (npm run dev)
+│   ├── server/             # UI HTTP server
+│   │   └── index.ts         # Serves ui/ + /api/prediction (npm run ui)
+│   └── lib/                # Shared core (used by app + server)
+│       ├── config.ts        # Env config
+│       ├── types/           # Shared types
+│       ├── connectors/      # Polymarket API
+│       ├── engine/          # Features, predictor, paper trader
+│       └── models/          # Optional LLM scorer
+├── ui/
+│   ├── index.html
+│   ├── css/style.css
+│   └── js/app.js
+├── .env, .env.example
+└── package.json
+```
 
 | Part | Role |
 |------|------|
-| **Connector** | Fetches market ticks and whale-flow proxy from Polymarket Gamma API. |
-| **Features** | Builds a feature vector (returns, volatility, whale bias/intensity). |
-| **Predictor** | Heuristic ensemble → **P(UP 5m)** and confidence. |
-| **Paper trader** | Converts predictions into HOLD/BUY/SELL with configurable edge and size. |
-| **LLM scorer** | Optional; adds a scalar bias from an OpenAI-compatible API. |
-| **UI server** | Serves the compare UI and `/api/prediction` for the frontend. |
+| **app** | Bot entry: runs the prediction loop (connector → features → predictor → paper trader). |
+| **server** | Serves `ui/` and `/api/prediction` for the compare UI. |
+| **lib** | Shared code: config, types, connectors, engine (features, predictor, paper trader), models (LLM). |
 
 ---
 

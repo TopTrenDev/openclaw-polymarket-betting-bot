@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OpenClaw Polymarket Betting Bot</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./css/style.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="header">
+        <span class="header__logo" aria-hidden="true">🦞</span>
+        <div>
+          <h1 class="header__title">OpenClaw Polymarket Betting Bot</h1>
+          <p class="header__sub">Compare 5m predictions vs actual outcome · Paper trading</p>
+        </div>
+      </header>
+
+      <section class="card">
+        <h2 class="card__title">Live prediction</h2>
+        <div class="snapshot-bar">
+          <button type="button" id="refresh" class="btn">Get prediction</button>
+          <span id="status" class="status">idle</span>
+        </div>
+        <div id="snapshot" class="snapshot-grid"></div>
+        <div class="gauge-wrap">
+          <div class="gauge-bar" role="presentation">
+            <div id="gaugeFill" class="gauge-fill gauge-fill--up" style="width: 50%"></div>
+          </div>
+          <div id="gaugeLabels" class="gauge-labels"><span>0%</span><span>50%</span><span>100%</span></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 class="card__title">Auto compare (5m)</h2>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="entryYes">Entry YES price</label>
+            <input id="entryYes" type="number" min="0" max="1" step="0.0001" placeholder="0.50" />
+          </div>
+          <div class="form-group">
+            <label for="delaySec">Settle delay (sec)</label>
+            <input id="delaySec" type="number" min="10" step="1" value="300" />
+          </div>
+          <button type="button" id="startAuto" class="btn">Start auto compare</button>
+        </div>
+        <p id="pendingInfo" class="pending-info">No pending auto-compare.</p>
+      </section>
+
+      <section class="card">
+        <h2 class="card__title">Whale panel (live sample)</h2>
+        <div id="whaleStats" class="whale-stats">No whale data yet.</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Wallet</th>
+                <th>Net YES $</th>
+                <th>Gross $</th>
+                <th>Bias</th>
+              </tr>
+            </thead>
+            <tbody id="whales"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 class="card__title">History</h2>
+        <div id="stats" class="stats-bar"></div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Market</th>
+                <th>Pred</th>
+                <th>Entry</th>
+                <th>Exit</th>
+                <th>Actual</th>
+                <th>✓</th>
+              </tr>
+            </thead>
+            <tbody id="history"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <footer class="footer">
+        OpenClaw Polymarket Betting Bot · Paper-trading only · No strategy guarantees profits.
+      </footer>
+    </div>
+
+    <script src="./js/app.js"></script>
+  </body>
+</html>
