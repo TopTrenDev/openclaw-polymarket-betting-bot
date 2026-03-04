@@ -21,7 +21,6 @@ const llm = new LlmScorer(cfg.openaiApiKey, cfg.openaiBaseUrl, cfg.openaiModel);
 
 async function getSnapshot() {
   const ticks = await connector.getMarketTicks(20);
-  const marketMeta = await connector.getCurrentMarketInfo();
   const marketId = ticks[ticks.length - 1].marketId;
   const whale = await connector.getWhaleFlow(marketId);
   const features = buildFeatures(ticks, whale);
@@ -29,7 +28,6 @@ async function getSnapshot() {
   const pred = predict(features, llmBias);
   return {
     marketId,
-    marketMeta,
     currentYes: features.yesPrice,
     whale,
     prediction: pred,

@@ -30,7 +30,6 @@ export class PolymarketConnector {
   private selectedMarket: GammaMarket | null = null;
   private selectedSlug: string | null = null;
   private history: MarketTick[] = [];
-  private lastMarketRefreshMs = 0;
 
   constructor(
     private readonly baseUrl: string,
@@ -102,28 +101,14 @@ export class PolymarketConnector {
     };
   }
 
-  async getCurrentMarketInfo(): Promise<{ slug: string; endDate?: string; remainingSec: number; question?: string }> {
-    const m = await this.resolveMarket();
-    const endMs = m.endDate ? new Date(m.endDate).getTime() : 0;
-    return {
-      slug: m.slug || m.id,
-      endDate: m.endDate,
-      remainingSec: endMs ? Math.max(0, Math.floor((endMs - Date.now()) / 1000)) : -1,
-      question: m.question
-    };
-  }
-
   private async resolveMarket(): Promise<GammaMarket> {
-    const now = Date.now();
-    const shouldRefresh = !this.selectedMarket || this.selectedMarket.closed || (now - this.lastMarketRefreshMs > 30000);
-    if (!shouldRefresh && this.selectedMarket) return this.selectedMarket;
+    if (this.selectedMarket && !this.selectedMarket.closed) return this.selectedMarket;
 
     if (this.marketSlug) {
       const arr = await this.fetchJson<GammaMarket[]>(`${this.baseUrl}/markets?slug=${encodeURIComponent(this.marketSlug)}`);
       if (arr.length) {
         this.selectedMarket = arr[0];
         this.selectedSlug = arr[0].slug || this.marketSlug;
-        this.lastMarketRefreshMs = now;
         return arr[0];
       }
     }
@@ -133,7 +118,6 @@ export class PolymarketConnector {
       if (arr.length) {
         this.selectedMarket = arr[0];
         this.selectedSlug = arr[0].slug || null;
-        this.lastMarketRefreshMs = now;
         return arr[0];
       }
     }
@@ -146,7 +130,6 @@ export class PolymarketConnector {
       if (arr.length) {
         this.selectedMarket = arr[0];
         this.selectedSlug = arr[0].slug || btc5m.eventSlug;
-        this.lastMarketRefreshMs = now;
         return arr[0];
       }
     }
@@ -165,7 +148,6 @@ export class PolymarketConnector {
     candidates.sort((a, b) => new Date(a.endDate || 0).getTime() - new Date(b.endDate || 0).getTime());
     this.selectedMarket = candidates[0];
     this.selectedSlug = candidates[0].slug || null;
-    this.lastMarketRefreshMs = now;
     return candidates[0];
   }
 
@@ -182,11 +164,10 @@ export class PolymarketConnector {
     const bid = Number(m.bestBid ?? NaN);
     const ask = Number(m.bestAsk ?? NaN);
 
-    // Prefer live orderbook midpoint; fallback to last trade if book is unavailable.
+    if (Number.isFinite(last) && last > 0 && last < 1) return clamp01(last);
     if (Number.isFinite(bid) && Number.isFinite(ask) && bid >= 0 && ask <= 1 && ask >= bid) {
       return clamp01((bid + ask) / 2);
     }
-    if (Number.isFinite(last) && last > 0 && last < 1) return clamp01(last);
     return 0.5;
   }
 

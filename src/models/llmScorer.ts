@@ -10,7 +10,7 @@ export class LlmScorer {
   async score(features: FeatureVector): Promise<number> {
     if (!this.apiKey) return 0; // neutral if not configured
 
-    const prompt = `Score short-horizon UP probability bias in [-1,1].\nfeatures=${JSON.stringify(features)}`;
+    const prompt = `Score 5-minute UP probability bias in [-1,1].\nfeatures=${JSON.stringify(features)}`;
 
     const res = await fetch(`${this.baseUrl}/chat/completions`, {
       method: "POST",

@@ -23,23 +23,14 @@ async function refreshPrediction(){
   lastSnapshot = data;
 
   const p5 = data.prediction.pUp5m;
-  const p25 = data.prediction.pUp2m30s;
   const side = sideFromProb(p5);
-
-  const meta = data.marketMeta || {};
-  const remain = Number(meta.remainingSec ?? -1);
-  const remainText = remain >= 0 ? `${remain}s` : 'n/a';
 
   snapshotEl.innerHTML = `
     <div><strong>Market</strong><br>${data.marketId}</div>
     <div><strong>Current YES</strong><br>${fmt(data.currentYes)}</div>
     <div><strong>Pred Side (5m)</strong><br>${side}</div>
-    <div><strong>P(UP 2.5m)</strong><br>${fmt(p25,3)}</div>
     <div><strong>P(UP 5m)</strong><br>${fmt(p5,3)}</div>
     <div><strong>Confidence</strong><br>${fmt(data.prediction.confidence,2)}</div>
-    <div><strong>Live Slug</strong><br>${meta.slug || '-'}</div>
-    <div><strong>Ends In</strong><br>${remainText}</div>
-    <div><strong>Question</strong><br>${meta.question || '-'}</div>
   `;
 
   const whale = data.whale || {};
