@@ -2,6 +2,9 @@
 
 A **TypeScript** skeleton bot for **5-minute** prediction markets on [Polymarket](https://polymarket.com), combining on-chain style signals with optional LLM context—built for paper trading and backtesting before going live.
 
+[![Telegram](https://img.shields.io/badge/Telegram-@toptrendev_66-2CA5E0?style=for-the-badge&logo=telegram)](https://t.me/TopTrenDev_66)
+[![Twitter](https://img.shields.io/badge/Twitter-@toptrendev-1DA1F2?style=for-the-badge&logo=x)](https://x.com/intent/follow?screen_name=toptrendev)
+
 ---
 
 ## ✨ What It Does
