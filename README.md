@@ -99,6 +99,6 @@ See `.env.example` for all variables.
 
 ---
 
-## 📜 License
+## ⭐ Like this project?
 
-Use and modify as you like; always verify behavior and risk before trading real funds.
+If the project is interesting for you, **give it a star** on GitHub. If you want to know the project in more detail or have questions, please **contact me** — I’d be happy to chat.
