@@ -5,11 +5,14 @@ import { predict } from "../lib/engine/predictor.js";
 import { PaperTrader } from "../lib/engine/paperTrader.js";
 import { LlmScorer } from "../lib/models/llmScorer.js";
 
-const connector = new PolymarketConnector(
-  cfg.polymarketRestBase,
-  cfg.polymarketMarketSlug,
-  cfg.polymarketMarketId
-);
+const connector = new PolymarketConnector({
+  gammaBaseUrl: cfg.polymarketRestBase,
+  clobHost: cfg.polymarketClobBase,
+  dataApiBase: cfg.polymarketDataApiBase,
+  chainId: cfg.polymarketChainId,
+  marketSlug: cfg.polymarketMarketSlug,
+  marketId: cfg.polymarketMarketId
+});
 const llm = new LlmScorer(cfg.openaiApiKey, cfg.openaiBaseUrl, cfg.openaiModel);
 const trader = new PaperTrader(cfg.maxPositionUsd, cfg.edgeThreshold);
 

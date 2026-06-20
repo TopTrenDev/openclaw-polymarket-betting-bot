@@ -9,11 +9,14 @@ import { LlmScorer } from "../lib/models/llmScorer.js";
 
 const uiDir = path.resolve(process.cwd(), "ui");
 
-const connector = new PolymarketConnector(
-  cfg.polymarketRestBase,
-  cfg.polymarketMarketSlug,
-  cfg.polymarketMarketId
-);
+const connector = new PolymarketConnector({
+  gammaBaseUrl: cfg.polymarketRestBase,
+  clobHost: cfg.polymarketClobBase,
+  dataApiBase: cfg.polymarketDataApiBase,
+  chainId: cfg.polymarketChainId,
+  marketSlug: cfg.polymarketMarketSlug,
+  marketId: cfg.polymarketMarketId
+});
 const llm = new LlmScorer(cfg.openaiApiKey, cfg.openaiBaseUrl, cfg.openaiModel);
 
 async function getSnapshot() {

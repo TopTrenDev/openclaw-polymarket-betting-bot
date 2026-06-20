@@ -2,6 +2,9 @@ import "dotenv/config";
 
 export const cfg = {
   polymarketRestBase: process.env.POLYMARKET_REST_BASE ?? "https://gamma-api.polymarket.com",
+  polymarketClobBase: process.env.POLYMARKET_CLOB_BASE ?? "https://clob.polymarket.com",
+  polymarketDataApiBase: process.env.POLYMARKET_DATA_API_BASE ?? "https://data-api.polymarket.com",
+  polymarketChainId: Number(process.env.POLYMARKET_CHAIN_ID ?? 137),
   binanceRestBase: process.env.BINANCE_REST_BASE ?? "https://fapi.binance.com",
   openaiApiKey: process.env.OPENAI_API_KEY,
   openaiBaseUrl: process.env.OPENAI_BASE_URL ?? "https://api.openai.com/v1",

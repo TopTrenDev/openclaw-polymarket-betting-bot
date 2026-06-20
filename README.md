@@ -81,7 +81,7 @@ The UI lets you:
 
 ## ⚙️ Configuration (.env)
 
-- **Polymarket** — `POLYMARKET_REST_BASE`, `POLYMARKET_MARKET_SLUG` or `POLYMARKET_MARKET_ID` (optional; otherwise the bot picks an active BTC up/down market).
+- **Polymarket** — `POLYMARKET_REST_BASE` (Gamma API), `POLYMARKET_CLOB_BASE` (CLOB v2), `POLYMARKET_DATA_API_BASE`, `POLYMARKET_CHAIN_ID`, plus optional `POLYMARKET_MARKET_SLUG` or `POLYMARKET_MARKET_ID` (otherwise the bot picks an active BTC up/down market).
 - **Loop** — `LOOP_SECONDS` (how often to run the prediction loop).
 - **Paper trading** — `MAX_POSITION_USD`, `EDGE_THRESHOLD`.
 - **LLM** — `OPENAI_API_KEY`, optional `OPENAI_BASE_URL`, `OPENAI_MODEL`.
@@ -92,7 +92,7 @@ See `.env.example` for all variables.
 
 ## 📌 Notes
 
-- **Paper-trading by default** — No real orders are placed; the connector pulls real market snapshots for a realistic test.
+- **Paper-trading by default** — No real orders are placed; the connector pulls live CLOB v2 midpoint prices (with Gamma fallback) for a realistic test.
 - **Whale flow** is currently a proxy (volume/price-change metadata), not wallet-level fills.
 - You can **pin a market** with `POLYMARKET_MARKET_SLUG` or `POLYMARKET_MARKET_ID`.
 - **No strategy guarantees profits** — Use for learning and experimentation.

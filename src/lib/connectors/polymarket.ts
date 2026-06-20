@@ -1,3 +1,4 @@
+import { Chain, ClobClient } from "@polymarket/clob-client-v2";
 import { MarketTick, WhaleFlow } from "../types/index.js";
 
 type GammaMarket = {
@@ -10,8 +11,10 @@ type GammaMarket = {
   lastTradePrice?: number;
   bestBid?: number;
   bestAsk?: number;
-  outcomes?: string; // JSON string
-  outcomePrices?: string; // JSON string
+  outcomes?: string;
+  outcomePrices?: string;
+  clobTokenIds?: string;
+  conditionId?: string;
 };
 
 type DataTrade = {
@@ -26,20 +29,33 @@ type DataTrade = {
   outcome?: string;
 };
 
+export type PolymarketConnectorOptions = {
+  gammaBaseUrl: string;
+  clobHost: string;
+  dataApiBase: string;
+  chainId?: number;
+  marketSlug?: string;
+  marketId?: string;
+};
+
 export class PolymarketConnector {
   private selectedMarket: GammaMarket | null = null;
   private selectedSlug: string | null = null;
+  private yesTokenId: string | null = null;
   private history: MarketTick[] = [];
+  private readonly clob: ClobClient;
 
-  constructor(
-    private readonly baseUrl: string,
-    private readonly marketSlug?: string,
-    private readonly marketId?: string
-  ) {}
+  constructor(private readonly options: PolymarketConnectorOptions) {
+    this.clob = new ClobClient({
+      host: options.clobHost,
+      chain: (options.chainId ?? Chain.POLYGON) as Chain,
+      throwOnError: false
+    });
+  }
 
   async getMarketTicks(limit = 15): Promise<MarketTick[]> {
     const market = await this.resolveMarket();
-    const yes = this.deriveYesPrice(market);
+    const yes = await this.deriveYesPrice(market);
 
     this.history.push({
       marketId: market.slug || market.id,
@@ -103,36 +119,34 @@ export class PolymarketConnector {
   private async resolveMarket(): Promise<GammaMarket> {
     if (this.selectedMarket && !this.selectedMarket.closed) return this.selectedMarket;
 
-    if (this.marketSlug) {
-      const arr = await this.fetchJson<GammaMarket[]>(`${this.baseUrl}/markets?slug=${encodeURIComponent(this.marketSlug)}`);
-      if (arr.length) {
-        this.selectedMarket = arr[0];
-        this.selectedSlug = arr[0].slug || this.marketSlug;
-        return arr[0];
-      }
+    const { gammaBaseUrl, marketSlug, marketId } = this.options;
+
+    if (marketSlug) {
+      const arr = await this.fetchJson<GammaMarket[]>(
+        `${gammaBaseUrl}/markets?slug=${encodeURIComponent(marketSlug)}`
+      );
+      if (arr.length) return this.cacheMarket(arr[0], arr[0].slug || marketSlug);
     }
 
-    if (this.marketId) {
-      const arr = await this.fetchJson<GammaMarket[]>(`${this.baseUrl}/markets?id=${encodeURIComponent(this.marketId)}`);
-      if (arr.length) {
-        this.selectedMarket = arr[0];
-        this.selectedSlug = arr[0].slug || null;
-        return arr[0];
-      }
+    if (marketId) {
+      const arr = await this.fetchJson<GammaMarket[]>(
+        `${gammaBaseUrl}/markets?id=${encodeURIComponent(marketId)}`
+      );
+      if (arr.length) return this.cacheMarket(arr[0], arr[0].slug || null);
     }
 
     const recentTrades = await this.fetchRecentTrades(300);
     const btc5m = recentTrades.find((t) => (t.eventSlug || "").startsWith("btc-updown-5m-"));
     if (btc5m?.eventSlug) {
-      const arr = await this.fetchJson<GammaMarket[]>(`${this.baseUrl}/markets?slug=${encodeURIComponent(btc5m.eventSlug)}`);
-      if (arr.length) {
-        this.selectedMarket = arr[0];
-        this.selectedSlug = arr[0].slug || btc5m.eventSlug;
-        return arr[0];
-      }
+      const arr = await this.fetchJson<GammaMarket[]>(
+        `${gammaBaseUrl}/markets?slug=${encodeURIComponent(btc5m.eventSlug)}`
+      );
+      if (arr.length) return this.cacheMarket(arr[0], arr[0].slug || btc5m.eventSlug);
     }
 
-    const all = await this.fetchJson<GammaMarket[]>(`${this.baseUrl}/markets?closed=false&active=true&limit=1000&offset=500`);
+    const all = await this.fetchJson<GammaMarket[]>(
+      `${gammaBaseUrl}/markets?closed=false&active=true&limit=1000&offset=500`
+    );
     const candidates = all.filter((m) => {
       const q = `${m.question || ""} ${m.slug || ""}`.toLowerCase();
       return (q.includes("bitcoin") || q.includes("btc")) && q.includes("up or down");
@@ -143,12 +157,46 @@ export class PolymarketConnector {
     }
 
     candidates.sort((a, b) => new Date(a.endDate || 0).getTime() - new Date(b.endDate || 0).getTime());
-    this.selectedMarket = candidates[0];
-    this.selectedSlug = candidates[0].slug || null;
-    return candidates[0];
+    return this.cacheMarket(candidates[0], candidates[0].slug || null);
   }
 
-  private deriveYesPrice(m: GammaMarket): number {
+  private cacheMarket(market: GammaMarket, slug: string | null): GammaMarket {
+    this.selectedMarket = market;
+    this.selectedSlug = slug;
+    this.yesTokenId = this.resolveYesTokenId(market);
+    return market;
+  }
+
+  private resolveYesTokenId(market: GammaMarket): string | null {
+    const outcomes = parseJsonArray(market.outcomes).map((o) => `${o}`.toLowerCase());
+    const tokenIds = parseJsonArray(market.clobTokenIds).map(String);
+    if (!tokenIds.length) return null;
+
+    const idx = outcomes.findIndex((o) => o === "up" || o === "yes");
+    if (idx >= 0 && tokenIds[idx]) return tokenIds[idx];
+    return tokenIds[0] ?? null;
+  }
+
+  private async deriveYesPrice(market: GammaMarket): Promise<number> {
+    const tokenId = this.yesTokenId ?? this.resolveYesTokenId(market);
+    if (tokenId) {
+      const clobPrice = await this.fetchClobMidpoint(tokenId);
+      if (clobPrice !== null) return clobPrice;
+    }
+
+    return this.deriveYesPriceFromGamma(market);
+  }
+
+  private async fetchClobMidpoint(tokenId: string): Promise<number | null> {
+    const res = await this.clob.getMidpoint(tokenId);
+    if (!res || typeof res !== "object" || "error" in res) return null;
+
+    const price = Number((res as { mid?: string }).mid ?? NaN);
+    if (Number.isFinite(price) && price > 0 && price < 1) return clamp01(price);
+    return null;
+  }
+
+  private deriveYesPriceFromGamma(m: GammaMarket): number {
     const outcomes = parseJsonArray(m.outcomes);
     const prices = parseJsonArray(m.outcomePrices).map(Number);
     if (outcomes.length === prices.length && outcomes.length >= 2) {
@@ -168,7 +216,7 @@ export class PolymarketConnector {
   }
 
   private async fetchRecentTrades(limit = 200): Promise<DataTrade[]> {
-    const res = await fetch(`https://data-api.polymarket.com/trades?limit=${limit}`);
+    const res = await fetch(`${this.options.dataApiBase}/trades?limit=${limit}`);
     if (!res.ok) return [];
     return (await res.json()) as DataTrade[];
   }
